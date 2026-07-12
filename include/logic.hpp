@@ -29,6 +29,7 @@ public:
     void UpdateState();
     BoardState BoardState();
     Move MoveEvaluatorState();
+    Renderer RendererState(){return renderer;}
 
 };
 

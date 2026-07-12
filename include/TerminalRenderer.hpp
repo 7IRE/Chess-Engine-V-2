@@ -24,5 +24,7 @@ public:
     void Selector(int y,int x ,int c=-1,bool Blink=false);
 
     void updateTerminalBoard(BoardState boardState);
+
+    void finalScreen(int gamestate , int x , int y );
 };
 

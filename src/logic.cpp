@@ -239,6 +239,13 @@ bool Board::movePiece(Position Pos){
         bool isCapture = (final_Sq & allPieces);
         bool isPawnMove = (movingPieceBB == &whitePawns);
 
+        if (isPawnMove && (final_Sq == enpassant)) {
+            unsigned long long capturedPawn = enpassant >> 8; 
+            blackPawns &= ~capturedPawn;
+            isCapture = true; 
+        }
+
+
         if (final_Sq & allPieces) {
             blackPawns   &= ~final_Sq;
             blackKnights &= ~final_Sq;
@@ -246,17 +253,53 @@ bool Board::movePiece(Position Pos){
             blackRooks   &= ~final_Sq;
             blackQueens  &= ~final_Sq;
             blackKing    &= ~final_Sq;
+
+            if (final_Sq == (1ULL << 56)) blackCastleQueen = false;
+            if (final_Sq == (1ULL << 63)) blackCastleKing = false;
+        }
+
+        if (movingPieceBB == &whiteKing) {
+            if (Pos.initFile == 4 && Pos.finalFile == 6) {        
+                whiteRooks ^= (1ULL << 7) | (1ULL << 5);          
+            } else if (Pos.initFile == 4 && Pos.finalFile == 2) { 
+                whiteRooks ^= (1ULL << 0) | (1ULL << 3);          
+            }
+            whiteCastleKing = false;
+            whiteCastleQueen = false;
+        }
+        if (movingPieceBB == &whiteRooks) {
+            if (Curr_Sq == (1ULL << 0)) whiteCastleQueen = false; 
+            if (Curr_Sq == (1ULL << 7)) whiteCastleKing = false;  
         }
         
+        if (isPawnMove && (Pos.finalRank - Pos.initRank == 2)) {
+            enpassant = 1ULL << (Pos.initFile + 8 * (Pos.initRank + 1));
+        } else {
+            enpassant = 0; 
+        }
+
         if (isCapture || isPawnMove) {
             halfMoveClock = 0;
         }
          else {
             halfMoveClock++;
         }
-
-        *movingPieceBB ^= Curr_Sq;
-        *movingPieceBB ^= final_Sq;
+        
+        if(isPawnMove && Pos.finalRank == 7){
+            char Input='x';
+            while(Input<'1' || Input>'4'){
+                Input = input.getRawChar();
+            }
+            if(Input=='1') {whiteKnights ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Knight Promo
+            if(Input=='2') {whiteBishops ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Bishop Promo
+            if(Input=='3') {whiteRooks   ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Rook   Promo
+            if(Input=='4') {whiteQueens  ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Queen  Promo
+            
+        }
+        else{
+            *movingPieceBB ^= Curr_Sq;
+            *movingPieceBB ^= final_Sq;
+        }
 
         whitePieces = whitePawns | whiteKnights | whiteBishops | whiteRooks | whiteQueens | whiteKing;
         blackPieces = blackPawns | blackKnights | blackBishops | blackRooks | blackQueens | blackKing;
@@ -281,7 +324,13 @@ bool Board::movePiece(Position Pos){
         if (!movingPieceBB) return false;
 
         bool isCapture = (final_Sq & allPieces);
-        bool isPawnMove = (movingPieceBB == &whitePawns);
+        bool isPawnMove = (movingPieceBB == &blackPawns);
+
+        if (isPawnMove && (final_Sq == enpassant)) {
+            unsigned long long capturedPawn = enpassant << 8; 
+            whitePawns &= ~capturedPawn;
+            isCapture = true; 
+        }
 
         if (final_Sq & allPieces) {
             whitePawns   &= ~final_Sq;
@@ -290,9 +339,32 @@ bool Board::movePiece(Position Pos){
             whiteRooks   &= ~final_Sq;
             whiteQueens  &= ~final_Sq;
             whiteKing    &= ~final_Sq;
+
+            if (final_Sq == (1ULL << 0)) whiteCastleQueen = false; 
+            if (final_Sq == (1ULL << 7)) whiteCastleKing = false;
         }
 
-         
+
+        if (movingPieceBB == &blackKing) {
+            if (Pos.initFile == 4 && Pos.finalFile == 6) {        
+                blackRooks ^= (1ULL << 63) | (1ULL << 61);        
+            } else if (Pos.initFile == 4 && Pos.finalFile == 2) { 
+                blackRooks ^= (1ULL << 56) | (1ULL << 59);        
+            }
+            blackCastleKing = false;
+            blackCastleQueen = false;
+        }
+        if (movingPieceBB == &blackRooks) {
+            if (Curr_Sq == (1ULL << 56)) blackCastleQueen = false; 
+            if (Curr_Sq == (1ULL << 63)) blackCastleKing = false;  
+        }
+
+        if (isPawnMove && (Pos.initRank - Pos.finalRank == 2)) {
+            enpassant = 1ULL << (Pos.initFile + 8 * (Pos.initRank - 1));
+        } else {
+            enpassant = 0;
+        }
+    
         if (isCapture || isPawnMove) {
             halfMoveClock = 0;
         }
@@ -300,9 +372,21 @@ bool Board::movePiece(Position Pos){
             halfMoveClock++;
         }
 
-        *movingPieceBB ^= Curr_Sq;
-        *movingPieceBB ^= final_Sq;
 
+        if(isPawnMove && Pos.finalRank == 0){
+            char Input='x';
+            while(Input<'1' || Input>'4'){
+                Input = input.getRawChar();
+            }
+            if(Input=='1') {blackKnights ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Knight Promo
+            if(Input=='2') {blackBishops ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Bishop Promo
+            if(Input=='3') {blackRooks   ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Rook   Promo
+            if(Input=='4') {blackQueens  ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Queen  Promo
+        }
+        else{
+            *movingPieceBB ^= Curr_Sq;
+            *movingPieceBB ^= final_Sq;
+        }
         whitePieces = whitePawns | whiteKnights | whiteBishops | whiteRooks | whiteQueens | whiteKing;
         blackPieces = blackPawns | blackKnights | blackBishops | blackRooks | blackQueens | blackKing;
         allPieces   = whitePieces | blackPieces;
@@ -314,18 +398,4 @@ bool Board::movePiece(Position Pos){
     else{
         return false;
     }
-}
-
-int main(){
-    Board board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    board.UpdateState();
-    
-    while(1){
-        auto Selection = board.selection();
-        if(board.MoveEvaluatorState().MoveValidator(Selection,board.BoardState())){
-            board.movePiece(Selection);
-            board.UpdateState();
-        }
-    }
-    return 0 ;
 }
