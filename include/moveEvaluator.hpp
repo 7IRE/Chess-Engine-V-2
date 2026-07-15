@@ -1,7 +1,6 @@
 #include "../src/magicbitboards.cpp"
-#include "../include/input.hpp"
 #include "../include/boardState.hpp"
-
+#include "../include/input.hpp"
 
 class MoveData {
 private:

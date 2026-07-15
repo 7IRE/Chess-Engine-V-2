@@ -22,11 +22,13 @@
         */
 
 
-Board::Board( std::string boardFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"     ){ renderer.initializeTerminalBoard(); fenToBoard(boardFen);   }
+Board::Board( std::string boardFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"     ){  fenToBoard(boardFen);  file = 4;    rank = 1; }
 
-BoardState Board::BoardState(){return boardState;}
-Move Board::MoveEvaluatorState(){return move;}
-
+BoardState& Board::BoardState(){return boardState;}
+Move& Board::MoveEvaluatorState(){return move;}
+Renderer& Board::RendererState(){return renderer;}
+bool Board::getisPromoting(){return isPromoting;}
+bool Board::getWhiteToMove(){return whiteToMove;}
 
 void Board::UpdateState(){
     boardState.whitePawns = whitePawns , boardState.whiteKnights = whiteKnights , boardState.whiteBishops =  whiteBishops , boardState.whiteRooks = whiteRooks , boardState.whiteQueens = whiteQueens , boardState.whiteKing = whiteKing ;
@@ -37,7 +39,6 @@ void Board::UpdateState(){
     boardState.halfMoveClock = halfMoveClock ,boardState.fullMoveClock = fullMoveClock ;
     boardState.whiteCastleKing = whiteCastleKing ,boardState.whiteCastleQueen = whiteCastleQueen,boardState.blackCastleKing = blackCastleKing , boardState.blackCastleQueen =  blackCastleQueen ;  
 
-    renderer.updateTerminalBoard(boardState);
 }
 
 void Board::fenToBoard(std::string FenString){    
@@ -113,9 +114,9 @@ void Board::fenToBoard(std::string FenString){
 } 
 
 Position Board::selection(){
-    Position Selection;
-      /*Board is Numbered from left to right bottom to top
-          Fen from top to  bottom   
+    
+    /*Board is Numbered from left to right bottom to top
+        Fen from top to  bottom   
 
           7 - 0 1 2 3 4 5 6 7
           6
@@ -125,91 +126,40 @@ Position Board::selection(){
           2
           1
           0
-        */
-    char Input ;
-    int file,rank,colour;
-    int prevFile,prevRank;
+    */
 
-    bool ck;
-    do{
-        do{
-            ck = false;
-            Input = ' ';
-            if(whiteToMove){    file = prevFile = 7 , rank = prevRank = 0 ,colour = 107; }
-            else           {    file = prevFile = 0 , rank = prevRank = 7 ,colour = 40; }
+    if(Selection.finalRank!=-1){
+        Selection.initFile=-1;
+        Selection.initRank=-1;
+        Selection.finalFile=-1;
+        Selection.finalRank=-1;
+    }
 
-            while(Input!='y'){
-                Input = input.getRawChar();
-                if(Input>=65 && Input <=90){Input = Input + 32;}
-
-                if      (Input=='w'){rank++;}
-                else if (Input=='a'){file--;}
-                else if (Input=='s'){rank--;}
-                else if (Input=='d'){file++;}
-
-                if(rank<0){rank=7;}
-                else if(rank>7){rank=0;}
-
-                if(file<0){file=7;}
-                else if(file>7){file=0;}
-
-                renderer.Selector(prevFile+1,8-prevRank);
-                
-                renderer.Selector(file+1,8-rank,colour);
-                prevFile=file,prevRank=rank;
-            }
-            unsigned long long bitSelected = 1ULL <<(8*rank)+file;
-            if(whiteToMove){ ck = (bitSelected & whitePieces);}
-            else { ck = (bitSelected & blackPieces);}
-            if(ck){
-                renderer.Selector(prevFile+1,8-prevRank);
-                renderer.Selector(file+1,8-rank,43,true);
-            }
-            else{
-                renderer.Selector(prevFile+1,8-prevRank);
-                renderer.Selector(file+1,8-rank,41); 
-                renderer.Selector(file+1,8-rank); 
-            }
-        }while(!ck);
-        Selection.initFile=file , Selection.initRank = rank;
-
-
-            ck = false;
-            Input = ' ';
-
-
-            while(Input!='y'){
-                Input = input.getRawChar();
-                if(Input>=65 && Input <=90){Input = Input + 32;}
-
-                if      (Input=='w'){rank++;}
-                else if (Input=='a'){file--;}
-                else if (Input=='s'){rank--;}
-                else if (Input=='d'){file++;}
-
-                if(rank<0){rank=7;}
-                else if(rank>7){rank=0;}
-
-                if(file<0){file=7;}
-                else if(file>7){file=0;}
-
-                if(prevFile==Selection.initFile && prevRank==Selection.initRank){renderer.Selector(prevFile+1,8-prevRank,43,true);}
-                else{renderer.Selector(prevFile+1,8-prevRank);}
-                renderer.Selector(file+1,8-rank,colour);
-                prevFile=file,prevRank=rank;
-            }
-
-            renderer.Selector(file+1,8-rank);
-            renderer.Selector(Selection.initFile+1,8-Selection.initRank);
-            Selection.finalFile=file , Selection.finalRank=rank;
-            unsigned long long bitSelected = 1ULL <<(8*rank)+file;
-            if(whiteToMove){ck = (whitePieces & bitSelected);}
-            else{ck = (blackPieces & bitSelected);}
-            if(Selection.initFile==Selection.finalFile && Selection.initRank==Selection.finalRank){
-                ck = true;
+    int keyPressed = GetKeyPressed();
+    if (keyPressed >= 65 && keyPressed <= 90) keyPressed += 32;
+    if      (keyPressed == 'w') { rank++; }
+    else if (keyPressed == 'a') { file--; }
+    else if (keyPressed == 's') { rank--; }
+    else if (keyPressed == 'd') { file++; }
+    if(file<0){file=7;}
+    if(rank<0){rank=7;}
+    if(file>7){file=0;}
+    if(rank>7){rank=0;}
+    
+    if(keyPressed == 'y'){
+        if(Selection.initFile==-1){
+            Selection.initFile=file;
+            Selection.initRank=rank;
         }
-    }while(ck);
-
+        else if(Selection.finalRank==-1){
+            Selection.finalFile=file;
+            Selection.finalRank=rank;
+        }
+    }
+    if(Selection.initFile!=-1){
+            renderer.Selector(7-Selection.initRank,Selection.initFile,true);
+    }
+    renderer.Selector(7-rank,file,false);
     return Selection;
 }
 
@@ -286,15 +236,17 @@ bool Board::movePiece(Position Pos){
         }
         
         if(isPawnMove && Pos.finalRank == 7){
-            char Input='x';
-            while(Input<'1' || Input>'4'){
-                Input = input.getRawChar();
-            }
-            if(Input=='1') {whiteKnights ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Knight Promo
-            if(Input=='2') {whiteBishops ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Bishop Promo
-            if(Input=='3') {whiteRooks   ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Rook   Promo
-            if(Input=='4') {whiteQueens  ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Queen  Promo
-            
+            // char Input='x';
+            // while(Input<'1' || Input>'4'){
+            //     Input = input.getRawChar();
+            // }
+            // if(Input=='1') {whiteKnights ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Knight Promo
+            // if(Input=='2') {whiteBishops ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Bishop Promo
+            // if(Input=='3') {whiteRooks   ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Rook   Promo
+            // if(Input=='4') {whiteQueens  ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Queen  Promo
+            *movingPieceBB ^= Curr_Sq;
+            isPromoting = true;
+            promotionPendingMove = Pos; 
         }
         else{
             *movingPieceBB ^= Curr_Sq;
@@ -374,14 +326,17 @@ bool Board::movePiece(Position Pos){
 
 
         if(isPawnMove && Pos.finalRank == 0){
-            char Input='x';
-            while(Input<'1' || Input>'4'){
-                Input = input.getRawChar();
-            }
-            if(Input=='1') {blackKnights ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Knight Promo
-            if(Input=='2') {blackBishops ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Bishop Promo
-            if(Input=='3') {blackRooks   ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Rook   Promo
-            if(Input=='4') {blackQueens  ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Queen  Promo
+            // char Input='x';
+            // while(Input<'1' || Input>'4'){
+            //     Input = input.getRawChar();
+            // }
+            // if(Input=='1') {blackKnights ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Knight Promo
+            // if(Input=='2') {blackBishops ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Bishop Promo
+            // if(Input=='3') {blackRooks   ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Rook   Promo
+            // if(Input=='4') {blackQueens  ^= final_Sq;  *movingPieceBB ^= Curr_Sq;}// Queen  Promo
+            *movingPieceBB ^= Curr_Sq;
+            isPromoting = true;
+            promotionPendingMove = Pos; 
         }
         else{
             *movingPieceBB ^= Curr_Sq;
@@ -398,4 +353,33 @@ bool Board::movePiece(Position Pos){
     else{
         return false;
     }
+}
+
+
+void Board::handlePromotionInput() {
+    if (!isPromoting) return;
+
+    int Input = GetKeyPressed();
+    if (Input < '1' || Input > '4') return; 
+
+    unsigned long long final_Sq = 1ULL << (promotionPendingMove.finalFile + 8 * promotionPendingMove.finalRank);
+
+    if (!whiteToMove) { 
+        if      (Input == '1') whiteKnights |= final_Sq;
+        else if (Input == '2') whiteBishops |= final_Sq;
+        else if (Input == '3') whiteRooks   |= final_Sq;
+        else if (Input == '4') whiteQueens  |= final_Sq;
+    } 
+    else { 
+        if      (Input == '1') blackKnights |= final_Sq;
+        else if (Input == '2') blackBishops |= final_Sq;
+        else if (Input == '3') blackRooks   |= final_Sq;
+        else if (Input == '4') blackQueens  |= final_Sq;
+    }
+
+    whitePieces = whitePawns | whiteKnights | whiteBishops | whiteRooks | whiteQueens | whiteKing;
+    blackPieces = blackPawns | blackKnights | blackBishops | blackRooks | blackQueens | blackKing;
+    allPieces   = whitePieces | blackPieces;
+
+    isPromoting = false; 
 }

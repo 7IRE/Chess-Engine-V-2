@@ -1,5 +1,4 @@
 #include "../include/moveEvaluator.hpp"
-
 bool Move::isSquareAttacked(unsigned long long Cur_sq ,const BoardState& boardState){
     if (Cur_sq == 0) return false;
     int square = __builtin_ctzll(Cur_sq);
