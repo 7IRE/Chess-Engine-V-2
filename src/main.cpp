@@ -1,18 +1,26 @@
-    #define RLIGHTS_IMPLEMENTATION
-    #define RAYGUI_IMPLEMENTATION
-  
-    #include "../include/logic.hpp"
+#define RLIGHTS_IMPLEMENTATION
+#define RAYGUI_IMPLEMENTATION
+
+#include "../include/gamemanager.hpp"
+
 
     int main(){
-
-
+        GameManager G1;
+        G1.mainScreen();
+        G1.gameOverScreen(1);
+    /*
+        
         InitWindow(1920,1080,"Chess Engine");
         SetExitKey(KEY_ESCAPE);
         Board board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         board.UpdateState();
 
         board.RendererState().initializeTerminalBoard();
-      
+        
+        Engine aiEngine;
+        int searchDepth = 5; 
+        bool enginePlaysBlack = true;
+
         int gameStatus = 0;
         bool gameOver = true;
         SetTargetFPS(60);
@@ -29,13 +37,27 @@
         while(!gameOver && !WindowShouldClose()){
             board.UpdateState();
             auto& state = board.BoardState();
-            Position Selection;
+            Position Selection={-1,-1,-1,-1};
             BeginDrawing();
             board.RendererState().updateTerminalBoard(board.BoardState());
-            if(board.getisPromoting()==true){
-                board.handlePromotionInput();
+            if(board.getisPromoting() == true){
+                board.handlePromotionInput(); 
             }
-            else{Selection = board.selection();}
+            else {
+                bool isEngineTurn = (board.getWhiteToMove() != enginePlaysBlack);
+                if (isEngineTurn) {
+                    MoveData engineMove = aiEngine.getBestMove(board.BoardState(), searchDepth);
+                    int from = engineMove.getFrom();
+                    int to = engineMove.getTo();
+                    Selection.initFile = from % 8;
+                    Selection.initRank = from / 8;
+                    Selection.finalFile = to % 8;
+                    Selection.finalRank = to / 8;
+                } 
+                else {
+                    Selection = board.selection();
+                }
+            }
             EndMode3D();
             if(board.getWhiteToMove()){
                 DrawText("WHITE TO MOVE", 10 , 1000, 20, WHITE);
@@ -62,5 +84,6 @@
             
         }
         board.RendererState().finalScreen(gameStatus,128,192);
+        */
         return 0;
     }

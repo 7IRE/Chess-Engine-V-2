@@ -1,6 +1,7 @@
 #include "../src/magicbitboards.cpp"
 #include "../include/boardState.hpp"
 #include "../include/input.hpp"
+#pragma once
 
 class MoveData {
 private:
@@ -52,7 +53,7 @@ private:
     unsigned long long WhitePawnMoveBoard[64][2] = {0};
     unsigned long long BlackPawnAttackBoard[64]  = {0};
     unsigned long long BlackPawnMoveBoard[64][2] = {0};
-    
+        
     unsigned long long WhiteKingSidePath ;
     unsigned long long WhiteQueenSidePath;
     unsigned long long BlackKingSidePath ;
