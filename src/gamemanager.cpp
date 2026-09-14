@@ -1,29 +1,33 @@
-
+#include <thread>
 #include "../include/gamemanager.hpp"
-
-
 
 
 GameManager::GameManager(){
     InitWindow(1920,1080,"Chess Engine");
+    InitAudioDevice();
     SetExitKey(KEY_ESCAPE);
-    Board board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    board = Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     board.UpdateState();
     board.RendererState().initializeTerminalBoard();
-
+    isAiThinking = true;
     searchDepth = 5; 
     enginePlaysBlack = true;
     gameStatus = 0;
     gameOver = true;
     SetTargetFPS(60);
-
+    main_screen = LoadMusicStream("../audio/main_screen.mp3");
+    paperRipSound = LoadSound("../audio/paper.mp3");
 }
 
 GameManager::~GameManager(){
-
+    UnloadMusicStream(main_screen);
+    UnloadSound(paperRipSound);
+    CloseAudioDevice();
+    CloseWindow();
 }
 
 int GameManager::mainScreen() {
+    PlayMusicStream(main_screen);
     int screenState = 0; 
     
     int playerColor = 0;  
@@ -37,6 +41,7 @@ int GameManager::mainScreen() {
     float timeElapsed = 0.0f;
 
     while (!WindowShouldClose()) {
+        UpdateMusicStream(main_screen);
         timeElapsed += GetFrameTime();
         
         int screenWidth = GetScreenWidth();
@@ -161,4 +166,152 @@ int GameManager::gameOverScreen(int result) {
     }
 
     return 0; 
+}
+
+int GameManager::twoPlayer(){
+       
+    while(!gameOver && !WindowShouldClose()){
+        board.UpdateState();
+        auto& state = board.BoardState();
+        Position Selection={-1,-1,-1,-1};
+        BeginDrawing();
+        board.RendererState().updateTerminalBoard(board.BoardState());
+        if(board.getisPromoting() == true){
+            board.handlePromotionInput(); 
+        }
+        else {
+            Selection = board.selection();
+        }
+        EndMode3D();
+        if(board.getWhiteToMove()){
+            DrawText("WHITE TO MOVE", 10 , 1000, 20, WHITE);
+        }
+        else{
+            DrawText("BLACK TO MOVE", 10 , 20, 20, BLACK);
+        }
+        EndDrawing();
+        
+        if (Selection.finalRank != -1) {
+            auto& stateRef = board.BoardState();
+            auto& evaluator = board.MoveEvaluatorState();
+            if (evaluator.MoveValidator(Selection, stateRef) && 
+                evaluator.isMoveActuallyLegal(stateRef, evaluator.createMoveData(Selection, stateRef))) {
+                board.movePiece(Selection);
+                board.UpdateState(); 
+                PlaySound(paperRipSound);
+                gameStatus = evaluator.isCheckmateOrStalemate(board.BoardState());
+                if (gameStatus != 0) {
+                    gameOver = true;
+                }
+            }
+        }
+        
+    }
+    board.UpdateState();
+    auto& state = board.BoardState();
+    BeginDrawing();
+    board.RendererState().updateTerminalBoard(board.BoardState());
+    EndMode3D();
+    EndDrawing();
+    return gameStatus;
+}
+
+
+int GameManager::playerVsAi(){
+    
+    while(!gameOver && !WindowShouldClose()){
+        board.UpdateState();
+        auto& state = board.BoardState();   
+        Position Selection={-1,-1,-1,-1};
+        BeginDrawing();
+        board.RendererState().updateTerminalBoard(board.BoardState());  
+        bool isEngineTurn = (board.getWhiteToMove() != enginePlaysBlack);
+        if(board.getisPromoting() == true){
+            if (isEngineTurn) board.setPromotionPiece('q'); 
+            else board.handlePromotionInput();   
+        }
+        else {
+            if (isEngineTurn) {
+                if (backgroundAiMove.getFrom() != 0) {
+
+                    int from = backgroundAiMove.getFrom();
+                    int to = backgroundAiMove.getTo();
+
+                    Selection.initFile = from % 8;
+                    Selection.initRank = from / 8;
+                    Selection.finalFile = to % 8;
+                    Selection.finalRank = to / 8;
+                    backgroundAiMove = MoveData(); 
+
+                } 
+                else if (!isAiThinking) {
+                    isAiThinking = true;
+
+                    std::thread([this, state]() {
+                        MoveData calculatedMove = aiEngine.getBestMove(state, searchDepth);
+                        backgroundAiMove = calculatedMove;
+                        isAiThinking = false; 
+                    }).detach(); 
+                }
+            } 
+            else {
+                Selection = board.selection();
+            }
+        }
+        EndMode3D();
+        if(board.getWhiteToMove()){
+            DrawText("WHITE TO MOVE", 10 , 1000, 20, WHITE);
+        }
+        else{
+            DrawText("BLACK TO MOVE", 10 , 20, 20, BLACK);
+        }
+        EndDrawing();
+        
+        if (Selection.finalRank != -1) {
+            auto& stateRef = board.BoardState();
+            auto& evaluator = board.MoveEvaluatorState();
+            if (evaluator.MoveValidator(Selection, stateRef) && 
+                evaluator.isMoveActuallyLegal(stateRef, evaluator.createMoveData(Selection, stateRef))) {
+                board.movePiece(Selection);
+                board.UpdateState(); 
+                PlaySound(paperRipSound);
+                gameStatus = evaluator.isCheckmateOrStalemate(board.BoardState());
+                if (gameStatus != 0) {
+                    gameOver = true;
+                }
+            }
+        }
+        
+    }
+    board.UpdateState();
+    auto& state = board.BoardState();
+    BeginDrawing();
+    board.RendererState().updateTerminalBoard(board.BoardState());
+    EndMode3D();
+    EndDrawing();
+    return gameStatus;
+}
+
+
+int GameManager::mainGame(int options){
+
+    gameOver = false;
+    gameStatus = 0;
+    isAiThinking = false;
+
+    board = Board();
+    board.UpdateState();
+    board.RendererState().initializeTerminalBoard();
+
+    if(options/10!=0 && options/10 !=0){searchDepth = ((options%10)*2 )+ 3;}
+    std::thread t1;
+    if(options == 1){
+       return twoPlayer();
+    }
+    else if(options/10 == 1 || options/10 == 2){
+        if(options/10==1) enginePlaysBlack = true;
+        else enginePlaysBlack = false;
+        return playerVsAi();
+    }
+    else return 0;
 }

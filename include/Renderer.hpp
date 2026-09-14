@@ -35,13 +35,10 @@ private:
     
 public:
     Renderer();
-    
     void initializeTerminalBoard();
-
     void Selector(int y,int x ,bool c);
-
     void updateTerminalBoard(BoardState boardState);
-
     void finalScreen(int gamestate , int x , int y );
+    ~Renderer();
 };
 

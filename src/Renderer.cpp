@@ -43,7 +43,6 @@
         }
         else{
             DrawModel(boardYellowBox, Vector3{ x*2.0f, -0.05f, y*2.0f }, 1.0f, WHITE);
-
         }
     }
 
@@ -75,51 +74,48 @@
         rlEnableDepthTest();
             
            
-            for(int i=0;i<8;i++){
-                for(int j=0;j<8;j++){
-                    if ((i+j)% 2 == 0) {
-                        DrawModel(boardWhiteBox, Vector3{ i*2.0f, -0.1f, j*2.0f }, 1.0f, WHITE);
-                    } 
-                    else {
-                        DrawModel(boardBlackBox, Vector3{ i*2.0f, -0.1f, j*2.0f }, 1.0f, WHITE);
-                    }
-                }   
-            }
-            
-             for(int i=0;i<8;i++){
-                for(int j=0;j<8;j++){
-
-                    char piece = currentBoard[i][j];
-                    if (piece == 0) continue;
-
-                    unsigned long long bitSelector = 1ULL<<((7-i)*8+j);
-                    Matrix rotationMat = MatrixRotateY(180.0f * DEG2RAD);
-                    PieceModel.materials[1].maps[MATERIAL_MAP_ALBEDO].color = Color{ 40, 40, 40, 255 };
-                    if (boardState.blackPieces & bitSelector) {
-                        PieceModel.materials[0].maps[MATERIAL_MAP_ALBEDO].color = Color{ 35, 35, 35, 255 };
-                    }  
-                    else {
-                        PieceModel.materials[0].maps[MATERIAL_MAP_ALBEDO].color = WHITE;
-                    }
-                    //Rotate Black Knight
-                    Matrix translationMat = MatrixTranslate( j*2 , 0, i*2);
-                    if(currentBoard[i][j]=='n'){
-                    translationMat = MatrixMultiply(rotationMat, translationMat);
-                    }
-                    if     (currentBoard[i][j]=='P' || currentBoard[i][j]=='p'){DrawMesh(PieceModel.meshes[MESH_PAWN  ], PieceModel.materials[0], translationMat);}
-                    else if(currentBoard[i][j]=='N' || currentBoard[i][j]=='n'){DrawMesh(PieceModel.meshes[MESH_KNIGHT], PieceModel.materials[0], translationMat);}
-                    else if(currentBoard[i][j]=='K' || currentBoard[i][j]=='k'){DrawMesh(PieceModel.meshes[MESH_KING  ], PieceModel.materials[0], translationMat);}
-                    else if(currentBoard[i][j]=='Q' || currentBoard[i][j]=='q'){DrawMesh(PieceModel.meshes[MESH_QUEEN ], PieceModel.materials[0], translationMat);}
-                    else if(currentBoard[i][j]=='B' || currentBoard[i][j]=='b'){DrawMesh(PieceModel.meshes[MESH_BISHOP], PieceModel.materials[0], translationMat);}
-                    else if(currentBoard[i][j]=='R' || currentBoard[i][j]=='r'){DrawMesh(PieceModel.meshes[MESH_ROOK  ], PieceModel.materials[0], translationMat);}
-                    
-                }   
-            }
+        for(int i=0;i<8;i++){
+            for(int j=0;j<8;j++){
+                if ((i+j)% 2 == 0) {
+                    DrawModel(boardWhiteBox, Vector3{ i*2.0f, -0.1f, j*2.0f }, 1.0f, WHITE);
+                } 
+                else {
+                    DrawModel(boardBlackBox, Vector3{ i*2.0f, -0.1f, j*2.0f }, 1.0f, WHITE);
+                }
+            }   
+        }
+        
+        for(int i=0;i<8;i++){
+            for(int j=0;j<8;j++){
+                char piece = currentBoard[i][j];
+                if (piece == 0) continue;
+                unsigned long long bitSelector = 1ULL<<((7-i)*8+j);
+                Matrix rotationMat = MatrixRotateY(180.0f * DEG2RAD);
+                PieceModel.materials[1].maps[MATERIAL_MAP_ALBEDO].color = Color{ 40, 40, 40, 255 };
+                if (boardState.blackPieces & bitSelector) {
+                    PieceModel.materials[0].maps[MATERIAL_MAP_ALBEDO].color = Color{ 35, 35, 35, 255 };
+                }  
+                else {
+                    PieceModel.materials[0].maps[MATERIAL_MAP_ALBEDO].color = WHITE;
+                }
+                //Rotate Black Knight
+                Matrix translationMat = MatrixTranslate( j*2 , 0, i*2);
+                if(currentBoard[i][j]=='n'){
+                translationMat = MatrixMultiply(rotationMat, translationMat);
+                }
+                if     (currentBoard[i][j]=='P' || currentBoard[i][j]=='p'){DrawMesh(PieceModel.meshes[MESH_PAWN  ], PieceModel.materials[0], translationMat);}
+                else if(currentBoard[i][j]=='N' || currentBoard[i][j]=='n'){DrawMesh(PieceModel.meshes[MESH_KNIGHT], PieceModel.materials[0], translationMat);}
+                else if(currentBoard[i][j]=='K' || currentBoard[i][j]=='k'){DrawMesh(PieceModel.meshes[MESH_KING  ], PieceModel.materials[0], translationMat);}
+                else if(currentBoard[i][j]=='Q' || currentBoard[i][j]=='q'){DrawMesh(PieceModel.meshes[MESH_QUEEN ], PieceModel.materials[0], translationMat);}
+                else if(currentBoard[i][j]=='B' || currentBoard[i][j]=='b'){DrawMesh(PieceModel.meshes[MESH_BISHOP], PieceModel.materials[0], translationMat);}
+                else if(currentBoard[i][j]=='R' || currentBoard[i][j]=='r'){DrawMesh(PieceModel.meshes[MESH_ROOK  ], PieceModel.materials[0], translationMat);}
+                
+            }   
+        }
       
     };
 
     void Renderer::finalScreen(int gamestate , int x , int y ){
-
         if(gamestate==3 && !WindowShouldClose()){
             //Game Over: Draw by 50-move rule
             while(!WindowShouldClose()){
@@ -153,7 +149,6 @@
                 EndDrawing();
             }
         }
-
         UnloadShader(lightShader);
         UnloadModel(boardWhiteBox);
         UnloadModel(boardBlackBox);
@@ -162,3 +157,13 @@
         UnloadModel(PieceModel);
         CloseWindow();
     };
+
+
+    Renderer::~Renderer(){
+        UnloadShader(lightShader);
+        UnloadModel(boardWhiteBox);
+        UnloadModel(boardBlackBox);
+        UnloadModel(boardGreenBox);  
+        UnloadModel(boardYellowBox);
+        UnloadModel(PieceModel);
+    }
