@@ -6,7 +6,7 @@ GameManager::GameManager(){
     InitWindow(1920,1080,"Chess Engine");
     InitAudioDevice();
     SetExitKey(KEY_ESCAPE);
-    board = Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    board.fenToBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     board.UpdateState();
     board.RendererState().initializeTerminalBoard();
     isAiThinking = true;
@@ -16,7 +16,7 @@ GameManager::GameManager(){
     gameOver = true;
     SetTargetFPS(60);
     main_screen = LoadMusicStream("../audio/main_screen.mp3");
-    paperRipSound = LoadSound("../audio/paper.mp3");
+    paperRipSound = LoadSound("../audio/paper.wav");
 }
 
 GameManager::~GameManager(){
@@ -112,18 +112,18 @@ int GameManager::gameOverScreen(int result) {
 
     switch (result) {
         case 1: 
-            resultText = "White Wins by Checkmate!"; 
+            resultText = "Checkmate!"; 
             resultColor = { 200, 200, 255, 255 }; 
             break;
         case 2: 
-            resultText = "Black Wins by Checkmate!"; 
+            resultText = "Draw by Stalemate!"; 
             resultColor = { 255, 100, 100, 255 }; 
             break;
         case 3: 
-            resultText = "Draw by Stalemate!"; 
+            resultText = "Game Over: Draw by 50-move rule"; 
             resultColor = LIGHTGRAY;
             break;
-        case 4: 
+        default: 
             resultText = "Game Drawn!"; 
             resultColor = LIGHTGRAY;
             break;
@@ -132,6 +132,7 @@ int GameManager::gameOverScreen(int result) {
     float timeElapsed = 0.0f;
 
     while (!WindowShouldClose()) {
+        board.UpdateState();
         timeElapsed += GetFrameTime();
         
         int screenWidth = GetScreenWidth();
@@ -141,8 +142,9 @@ int GameManager::gameOverScreen(int result) {
 
         BeginDrawing();
         //DrawRectangleGradientV(0, 0, screenWidth, screenHeight, bgLight, bgDark);
-
-
+        ClearBackground(bgDark); 
+        board.RendererState().updateTerminalBoard(board.BoardState());
+        EndMode3D();
         DrawRectangleRounded(Rectangle{ (float)centerX - 250, (float)centerY - 150, 500, 300 }, 0.1f, 10, panelColor);
         DrawRectangleRoundedLines(Rectangle{ (float)centerX - 250, (float)centerY - 150, 500, 300 }, 0.1f, 10, ColorAlpha(RAYWHITE, 0.3f));
 
@@ -232,8 +234,7 @@ int GameManager::playerVsAi(){
         }
         else {
             if (isEngineTurn) {
-                if (backgroundAiMove.getFrom() != 0) {
-
+                if (backgroundAiMove.getFrom() != backgroundAiMove.getTo()) {
                     int from = backgroundAiMove.getFrom();
                     int to = backgroundAiMove.getTo();
 
@@ -299,11 +300,11 @@ int GameManager::mainGame(int options){
     gameStatus = 0;
     isAiThinking = false;
 
-    board = Board();
+    board.fenToBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     board.UpdateState();
     board.RendererState().initializeTerminalBoard();
 
-    if(options/10!=0 && options/10 !=0){searchDepth = ((options%10)*2 )+ 3;}
+    if(options/10!=0 && options/10 !=0){searchDepth = ((options%10) )+2;}
     std::thread t1;
     if(options == 1){
        return twoPlayer();
