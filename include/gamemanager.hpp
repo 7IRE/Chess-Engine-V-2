@@ -14,6 +14,8 @@ class GameManager{
     MoveData backgroundAiMove;
     Music main_screen;
     Sound paperRipSound;
+    Sound ClickSound;
+    Sound HitSound;
     public:
     
     GameManager();

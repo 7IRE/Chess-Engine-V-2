@@ -17,11 +17,15 @@ GameManager::GameManager(){
     SetTargetFPS(60);
     main_screen = LoadMusicStream("../audio/main_screen.mp3");
     paperRipSound = LoadSound("../audio/paper.wav");
+    ClickSound = LoadSound("../audio/select.mp3");
+    HitSound = LoadSound("../audio/hit.mp3");
 }
 
 GameManager::~GameManager(){
     UnloadMusicStream(main_screen);
     UnloadSound(paperRipSound);
+    UnloadSound(ClickSound);
+    UnloadSound(HitSound);
     CloseAudioDevice();
     CloseWindow();
 }
@@ -62,13 +66,17 @@ int GameManager::mainScreen() {
             DrawText("CHESS", centerX - MeasureText("CHESS", 60) / 2, centerY - 180, 60, titleColor);
             DrawText("Select Game Mode", centerX - MeasureText("Select Game Mode", 20) / 2, centerY - 90, 20, LIGHTGRAY);
             if (GuiButton(Rectangle{ (float)centerX - 180, (float)centerY - 30, 360, 60 }, "Two Player")) {
+                PlaySound(ClickSound);
+
                 EndDrawing();
                 return 1; 
             }
             if (GuiButton(Rectangle{ (float)centerX - 180, (float)centerY + 50, 360, 60 }, "Player vs AI")) {
+                PlaySound(HitSound);
                 screenState = 1; 
             }
             if (GuiButton(Rectangle{ (float)centerX - 180, (float)centerY + 130, 360, 60 }, "EXIT")) {
+                PlaySound(ClickSound);
                 EndDrawing();
                 return 0;
             }
@@ -79,14 +87,17 @@ int GameManager::mainScreen() {
             GuiToggleGroup(Rectangle{ (float)centerX - 200, (float)centerY - 60, 200, 50 }, "WHITE;BLACK", &playerColor);
             DrawText("AI Toughness:", centerX - 200, centerY + 10, 20, LIGHTGRAY);
             if (GuiButton(Rectangle{ (float)centerX - 200, (float)centerY + 140, 190, 50 }, "BACK")) {
+                PlaySound(HitSound);
                 screenState = 0;
             }
             if (GuiButton(Rectangle{ (float)centerX + 10, (float)centerY + 140, 190, 50 }, "START GAME")) {
+                PlaySound(ClickSound);
                 EndDrawing();
                 int baseValue = (playerColor == 0) ? 10 : 20; 
                 return baseValue + aiDifficulty;
             }
             if (GuiDropdownBox(Rectangle{ (float)centerX - 200, (float)centerY + 40, 400, 50 }, "Easy;Medium;Hard", &aiDifficulty, aiDifficultyEditMode)) {
+                PlaySound(HitSound);
                 aiDifficultyEditMode = !aiDifficultyEditMode;
             }
         }
