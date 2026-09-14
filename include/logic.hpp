@@ -30,7 +30,7 @@ private:
     Position promotionPendingMove; 
            
 public:
-    
+    Board();
     Board( std::string boardFen);
     void fenToBoard(std::string FenString);
     Position selection();
@@ -40,6 +40,7 @@ public:
     BoardState& BoardState();
     Move& MoveEvaluatorState();
     Renderer& RendererState();
+    void setPromotionPiece(char promopiece);
     bool getisPromoting();
     bool getWhiteToMove();
 

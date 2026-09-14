@@ -21,7 +21,7 @@
           0
         */
 
-
+Board::Board(){std::string boardFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" ;  fenToBoard(boardFen);  file = 4;    rank = 1; }
 Board::Board( std::string boardFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"     ){  fenToBoard(boardFen);  file = 4;    rank = 1; }
 
 BoardState& Board::BoardState(){return boardState;}
@@ -355,7 +355,34 @@ bool Board::movePiece(Position Pos){
     }
 }
 
+void Board::setPromotionPiece(char promopiece){
+    int Input;
+    if(promopiece=='q')Input = 4;
+    if(promopiece=='r')Input = 3;
+    
+    if(promopiece=='b')Input = 2;
+    if(promopiece=='k')Input = 1;
+    if (Input < '1' || Input > '4') return; 
 
+    unsigned long long final_Sq = 1ULL << (promotionPendingMove.finalFile + 8 * promotionPendingMove.finalRank);
+
+    if (!whiteToMove) { 
+        if      (Input == '1') whiteKnights |= final_Sq;
+        else if (Input == '2') whiteBishops |= final_Sq;
+        else if (Input == '3') whiteRooks   |= final_Sq;
+        else if (Input == '4') whiteQueens  |= final_Sq;
+    } 
+    else { 
+        if      (Input == '1') blackKnights |= final_Sq;
+        else if (Input == '2') blackBishops |= final_Sq;
+        else if (Input == '3') blackRooks   |= final_Sq;
+        else if (Input == '4') blackQueens  |= final_Sq;
+    }
+
+    whitePieces = whitePawns | whiteKnights | whiteBishops | whiteRooks | whiteQueens | whiteKing;
+    blackPieces = blackPawns | blackKnights | blackBishops | blackRooks | blackQueens | blackKing;
+    allPieces   = whitePieces | blackPieces;
+}
 void Board::handlePromotionInput() {
     if (!isPromoting) return;
 
